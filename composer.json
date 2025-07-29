@@ -1,0 +1,23 @@
+{
+    "name": "vendimia/clap",
+    "description": "Command-line argument parser",
+    "license": "GPL-3.0-or-later",
+    "keywords": ["php", "commandline", "cli"],
+    "require": {
+        "php": ">=8.1",
+        "ext-mbstring": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vendimia\\Clap\\": "src"
+        }
+    },
+    "authors": [
+        {
+            "name": "Oliver Etchebarne",
+            "email": "yo@drmad.org",
+            "homepage": "https://drmad.org",
+            "role": "developer"
+        }
+    ]
+}
