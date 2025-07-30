@@ -8,6 +8,7 @@ use ReflectionMethod;
 use ReflectionObject;
 use ReflectionClass;
 use LogicException;
+use Closure;
 
 /**
  * Vendimia\Clap - Command-line argument parser 👏
@@ -33,12 +34,16 @@ class Parser
     }
 
     /**
-     * Converts camelCase to anticucho-case (or kebab-case)
+     * Converts camelCase or PascalCase to anticucho-case (or kebab-case)
      *
      * @see https://en.wikipedia.org/wiki/Anticucho
      */
     public static function camelToAnticuchoCase(string $camel_cased_name): string
     {
+        // La primera letra siempre estará en minúsculas
+        $camel_cased_name = mb_strtolower(mb_substr($camel_cased_name, 0, 1)) .
+            mb_substr($camel_cased_name, 1);
+
         return mb_strtolower(
             preg_replace('/(?!^)([\p{Lu}])/u', '-\1', $camel_cased_name)
         );
@@ -171,7 +176,7 @@ class Parser
     private function registerClass($class_name)
     {
         $rc = new ReflectionClass($class_name);
-        $command = $this::camelToAnticuchoCase($rc->getName());
+        $command = $this::camelToAnticuchoCase($rc->getShortName());
 
         $methods = $rc->getMethods(
             ReflectionMethod::IS_STATIC
@@ -203,7 +208,7 @@ class Parser
     /**
      * Register a function or class as receptor of the command line expression
      */
-    public function register($executable)
+    public function register($executable): void
     {
         // Procesamos el callable según su tipo
         if ($executable instanceof Closure || is_callable($executable)) {
@@ -215,6 +220,8 @@ class Parser
         } elseif (class_exists($executable)) {
             // Clase
             $this->registerClass($executable);
+        } else {
+            throw new LogicException("Can't register executable of type " . gettype($executable));
         }
     }
 
@@ -312,11 +319,10 @@ class Parser
     public function process(?array $args = null)
     {
         // Si no hay argumentos, usamos $argv menos el primer elemento
-        if(is_null($args)) {
+        if (is_null($args)) {
             // $argv no es global
-            $args = array_slice( $_SERVER['argv'], 1);
+            $args = array_slice($_SERVER['argv'], 1);
         }
-
 
         // Aquí estará la información de la función o método que será ejecutado
         $function_info = null;
